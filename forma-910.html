@@ -213,12 +213,13 @@ td.kno{white-space:normal;padding:5px 6px}
       <div><label class="f">Базовая ставка по НК, %</label><input id="t_rate_base" class="num" readonly></div>
       <div><label class="f">Статус ставки</label><input id="t_rate_src" readonly></div>
     </div>
+    <p class="hint">Ставка подставляется сама, если для вашего региона она известна. Проверьте её один раз и при
+      необходимости впишите свою, для отдельных мест работы это тоже можно сделать в приложении 910.01.</p>
     <div class="row noprint" style="margin-top:8px">
       <span class="hint" style="margin:0">Быстрый выбор:</span>
-      <button class="btn mini" onclick="setRate(null)">базовая</button>
-      <button class="btn mini" onclick="setRate(3)">3 %</button>
+      <button class="btn mini" onclick="setRate(null)">подставить автоматически</button>
       <button class="btn mini" onclick="setRate(2)">2 %</button>
-      <button class="btn mini" onclick="setRate(1)">1 %</button>
+      <button class="btn mini" onclick="setRate(3)">3 %</button>
     </div>
     <div id="rateNote"></div>
 
@@ -363,6 +364,24 @@ const REGIONS = {
   "Мангистауская область":[],"Павлодарская область":[],"Северо-Казахстанская область":[],
   "Туркестанская область":[],"Улытауская область":[],
 };
+/* Реальные ставки, которые местные власти установили на 2026 год. Собрано из открытых
+   бухгалтерских сайтов в августе 2026 года, это не официальный реестр решений, поэтому
+   перед сдачей декларации стоит один раз сверить цифру в Кабинете налогоплательщика.
+   Для городов и областей, где ставка одна на весь регион, число подставляется само.
+   Для областей, где у главного города и у окрестных районов ставки разные, число не
+   подставляется: лучше честно попросить проверить, чем угадать и ошибиться. */
+const REGION_RATE_2026 = {
+  "г. Астана":3, "г. Алматы":3, "г. Шымкент":2,
+  "Акмолинская область":2, "Атырауская область":2, "Восточно-Казахстанская область":2,
+  "Жамбылская область":2, "Карагандинская область":2, "Костанайская область":3,
+  "Кызылординская область":2, "Павлодарская область":3, "Северо-Казахстанская область":3,
+  "Туркестанская область":2,
+};
+const REGION_RATE_VARIES = new Set([
+  "Абайская область","Алматинская область","Актюбинская область","Жетысуская область",
+  "Западно-Казахстанская область","Мангистауская область","Улытауская область",
+]);
+const REGION_RATE_SOURCE_NOTE = "проверено в августе 2026 года";
 const MONTHS=["Январь","Февраль","Март","Апрель","Май","Июнь","Июль","Август","Сентябрь","Октябрь","Ноябрь","Декабрь"];
 const ROMAN=["I","II","III","IV","V","VI","VII","VIII","IX","X","XI","XII","XIII"];
 const TABS=[["p-tit","Титульный лист"],["p-main","Форма 910.00"],["p-app","Приложение 910.01"],
@@ -400,9 +419,18 @@ const PKEYS=['mrp','mzp','rate','limit','opv','opvr','so','vip','oosms','vosms',
 function yearP(y){return YEARS[y||S.t.year]||YEARS[2026];}
 function effP(){return Object.assign({},yearP(),S.po);}
 function baseRate(){return effP().rate;}
+/* Известная ставка местных властей для выбранного региона. Данные собраны только
+   на 2026 год, для остальных лет достоверных сведений нет, поэтому возвращаем пусто. */
+function regionHint(){
+  if(+S.t.year!==2026) return null;
+  const v=REGION_RATE_2026[S.t.region];
+  return v===undefined?null:v;
+}
 function regionRate(){
   const r=S.rateByRegion[S.t.region];
-  return (r===undefined||r===null||r==="")?baseRate():num(r);
+  if(r!==undefined&&r!==null&&r!=="") return num(r);
+  const h=regionHint();
+  return h!==null?h:baseRate();
 }
 function persist(){profiles[current]=S;localStorage.setItem(LSK,JSON.stringify(profiles));
   localStorage.setItem(LSK+"_cur",current);}
@@ -864,28 +892,47 @@ function syncParams(){
 }
 /* ---- аннотация к ставке налога по региону ---- */
 function renderRateNote(){
-  const base=baseRate(), r=regionRate(), low=r<base, custom=Math.abs(r-base)>1e-9;
+  const base=baseRate(), r=regionRate();
+  const raw=S.rateByRegion[S.t.region];
+  const custom = raw!==undefined&&raw!==null&&raw!=="";
+  const hint = regionHint();
+  const varies = (+S.t.year===2026) && REGION_RATE_VARIES.has(S.t.region);
+
   const bEl=document.getElementById('t_rate_base'); if(bEl) bEl.value=base+" %";
   const sEl=document.getElementById('t_rate_src');
-  if(sEl) sEl.value = custom
-    ? (low?"Понижена решением маслихата":"Повышена относительно базовой")
-    : "Базовая ставка "+S.t.year+" года";
+  if(sEl) sEl.value = custom ? "Вписано вами вручную"
+    : hint!==null ? "Подставлено автоматически"
+    : "Базовая ставка, точных данных по региону нет";
+
   const changed=Object.entries(S.rateByRegion)
     .filter(([,v])=>v!==undefined&&v!==null&&v!=="")
     .map(([k,v])=>`${esc(k)}: ${v} %`);
+
+  let body;
+  if(custom){
+    body=`Вы сами вписали ставку <b>${r} %</b> для региона «${esc(S.t.region)}» (обычная ставка по закону, без местных решений: ${base} %).
+      Программа запомнит эту цифру именно для этого региона.`;
+  }else if(hint!==null){
+    body=`Программа сама подставила ставку <b>${r} %</b> для региона «${esc(S.t.region)}»: именно её ввели у себя местные власти
+      на ${S.t.year} год вместо обычных ${base} %. Цифра взята не из официального документа, а с бухгалтерских сайтов
+      (${REGION_RATE_SOURCE_NOTE}), поэтому один раз сверьте её в Кабинете налогоплательщика перед тем, как платить: местные
+      власти иногда меняют решение уже после того, как о нём написали.`;
+  }else if(varies){
+    body=`В этом регионе главный город и окрестные районы платят по-разному, где-то 2 %, где-то 3 %, и угадывать точную цифру
+      для вашего города или района программа не будет. Сейчас стоит обычная ставка ${base} %. Пожалуйста, узнайте свою
+      настоящую ставку в Кабинете налогоплательщика или в своей налоговой и впишите её в поле выше.`;
+  }else{
+    body=`Для этого региона (или года) точных сведений о решении местных властей в программе пока нет. Стоит обычная ставка
+      ${base} %. Узнайте свою настоящую ставку в Кабинете налогоплательщика и впишите её в поле выше.`;
+  }
+
   const el=document.getElementById('rateNote'); if(!el) return;
   el.innerHTML=
-    `<div class="msg ${custom?'g':'i'}">
-      <b>Ставка налога устанавливается по каждому региону отдельно.</b>
-      Базовая ставка на ${S.t.year} год составляет ${base} %. Местный представительный орган
-      (маслихат области, города республиканского значения или района) своим решением вправе понизить её
-      для отдельных категорий налогоплательщиков, и в каждом регионе такое решение принимается
-      самостоятельно и в разные сроки. Проверьте действующее решение маслихата по месту
-      регистрации и укажите ставку здесь, она подставится в приложение 910.01 как ставка
-      по умолчанию для всех мест деятельности. Ставка запоминается отдельно для каждого региона.
-      ${custom?`<br>Сейчас для региона «${esc(S.t.region)}» применяется <b>${r} %</b> вместо базовых ${base} %.`:''}
-      ${changed.length?`<br>Свои ставки заданы: ${changed.join('; ')}.`:''}
-      Если у отдельного места деятельности ставка другая, задайте её в графе G приложения 910.01.
+    `<div class="msg ${custom||hint!==null?'g':'w'}">
+      <b>Ставку налога устанавливают местные власти, и в каждом регионе она своя.</b>
+      ${body}
+      ${changed.length?`<br>Ставки, вписанные вами вручную: ${changed.join('; ')}.`:''}
+      Если у отдельного места работы ставка другая, впишите её отдельно в графе «Ставка» приложения 910.01.
     </div>`;
 }
 
@@ -965,7 +1012,8 @@ window.addEventListener('DOMContentLoaded',()=>{
     renderPlaces();renderPlaceCalc();recalc();};
   document.getElementById('t_rate').addEventListener('input',e=>{
     const v=pos(e.target.value);
-    if(e.target.value===""||Math.abs(v-baseRate())<1e-9) delete S.rateByRegion[S.t.region];
+    const auto=(regionHint()!==null)?regionHint():baseRate();
+    if(e.target.value===""||Math.abs(v-auto)<1e-9) delete S.rateByRegion[S.t.region];
     else S.rateByRegion[S.t.region]=v;
     renderPlaceCalc();recalc();});
   PKEYS.forEach(k=>{
