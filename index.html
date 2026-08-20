@@ -104,9 +104,7 @@ tr.tot td{background:var(--accent-bg);font-weight:600}
 table input{border:0;border-radius:0;background:none;padding:4px 6px;font-size:12px}
 table input:focus{box-shadow:inset 0 0 0 2px var(--accent-bg);border-radius:2px}
 td.kno{white-space:normal;padding:5px 6px}
-.knobox{display:grid;gap:4px}
-.knobox select{font-size:11.5px;padding:4px 6px}
-.knobox input{border:1px solid #ccd4de;border-radius:3px;padding:3px 6px;font-size:11.5px}
+td.kno input{border:1px solid #ccd4de;border-radius:3px;padding:4px 6px;font-size:12px}
 
 /* ---------- прочее ---------- */
 .btn{appearance:none;border:1px solid #ccd4de;background:#fff;border-radius:3px;
@@ -199,7 +197,6 @@ td.kno{white-space:normal;padding:5px 6px}
       <div><label class="f">Налоговый период</label><select id="t_period">
         <option value="1">1 полугодие</option>
         <option value="2">2 полугодие</option>
-        <option value="0">Календарный год</option>
       </select></div>
       <div><label class="f">Вид декларации</label><select id="t_vid" onchange="touch()">
         <option>Очередная</option><option>Первоначальная</option><option>Дополнительная</option>
@@ -407,6 +404,10 @@ function load(){
   S=profiles[current];
   if(!S.po) S.po={};
   if(!S.rateByRegion) S.rateByRegion={};
+  if(!S.t.period) S.t.period=1;   // «Календарный год» больше не сдаётся, старое значение сбрасываем
+  // раньше код УГД можно было выбрать из списка и одновременно вписать вручную,
+  // теперь это одно поле, старые данные сводим в него же
+  (S.places||[]).forEach(p=>{ if(!p.kno && p.knoManual) p.kno=p.knoManual; delete p.knoManual; });
 }
 
 /* параметры года: значения из справочника + только ручные правки пользователя.
@@ -579,17 +580,20 @@ function renderIncMonths(){
 }
 
 /* ---- 910.01: места деятельности ---- */
-function knoOptions(sel){
+/* Один список подсказок на регион (общий для всех строк): известные коды показываются
+   при вводе, но само поле остаётся обычным текстовым полем, значение только одно,
+   без риска, что выбор из списка и ручной ввод разойдутся между собой. */
+function knoDatalist(){
   const list=REGIONS[S.t.region]||[];
-  return `<option value="">выбрать…</option>`+
-    list.map(x=>`<option value="${x.slice(0,4)}" ${sel===x.slice(0,4)?'selected':''}>${esc(x)}</option>`).join('')+
-    (sel&&!list.some(x=>x.slice(0,4)===sel)?`<option value="${esc(sel)}" selected>${esc(sel)}</option>`:'');
+  return `<datalist id="knoList">${list.map(x=>
+    `<option value="${x.slice(0,4)}">${esc(x)}</option>`).join('')}</datalist>`;
 }
 function renderPlaces(){
   const P=S.places;
   document.getElementById('placeTable').innerHTML=
+    knoDatalist()+
     `<tr><th style="width:44px"><span class="col">A</span>№</th>
-      <th style="width:178px"><span class="col">B</span>Код УГД</th>
+      <th style="width:130px"><span class="col">B</span>Код УГД</th>
       <th class="l"><span class="col">C</span>Город / село</th>
       <th class="l"><span class="col">D</span>Улица</th>
       <th style="width:86px"><span class="col">E</span>Дом</th>
@@ -597,11 +601,9 @@ function renderPlaces(){
       <th style="width:40px" class="noprint"></th></tr>`+
     P.map((p,i)=>`<tr>
       <td>${i+1}</td>
-      <td class="kno"><div class="knobox">
-          <select onchange="S.places[${i}].kno=this.value;recalc()">${knoOptions(p.kno)}</select>
-          <input maxlength="4" inputmode="numeric" placeholder="или код вручную" value="${esc(p.knoManual||'')}"
-            oninput="this.value=this.value.replace(/\\D/g,'');S.places[${i}].knoManual=this.value;recalc()">
-        </div></td>
+      <td class="kno"><input list="knoList" maxlength="4" inputmode="numeric" placeholder="код"
+            value="${esc(p.kno||'')}"
+            oninput="this.value=this.value.replace(/\\D/g,'');S.places[${i}].kno=this.value;recalc()"></td>
       <td class="l"><input value="${esc(p.city)}" oninput="S.places[${i}].city=this.value"></td>
       <td class="l"><input value="${esc(p.street)}" oninput="S.places[${i}].street=this.value"></td>
       <td><input value="${esc(p.house)}" oninput="S.places[${i}].house=this.value"></td>
@@ -875,7 +877,7 @@ function recalc(){
      <span style="flex:1"></span>
      <div class="it"><span>Всего к уплате</span><b>${fmt(mainTot+empTot)} ₸</b></div>`;
 
-  document.getElementById('placeWarn').innerHTML = S.places.some(pl=>!(pl.knoManual||pl.kno))
+  document.getElementById('placeWarn').innerHTML = S.places.some(pl=>!pl.kno)
     ? `<div class="msg w">Не у всех мест деятельности указан код УГД (графа B).</div>`:"";
 
   persist();
@@ -963,7 +965,8 @@ function bind(){
   document.getElementById('t_iin').value=S.t.iin||"";
   document.getElementById('t_fio').value=S.t.fio||"";
   document.getElementById('t_year').value=S.t.year||2026;
-  document.getElementById('t_period').value=String(S.t.period??1);
+  if(!S.t.period) S.t.period=1;
+  document.getElementById('t_period').value=String(S.t.period);
   document.getElementById('t_vid').value=S.t.vid||"Очередная";
   document.getElementById('t_region').value=S.t.region||"г. Астана";
   document.getElementById('f_pens').checked=!!S.t.pens;
