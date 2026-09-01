@@ -1,0 +1,727 @@
+/* ==========================================================
+   Форма 910.00: стили
+   Светлая тема, без зависимостей от внешних библиотек.
+   ========================================================== */
+
+:root {
+  --page: #eef1f5;
+  --doc: #fff;
+  --line: #dde3ea;
+  --line2: #eef1f5;
+  --ink: #1b2530;
+  --dim: #6b7787;
+  --accent: #1a6ec4;
+  --accent-bg: #eaf1fa;
+  --band: #f4f7fb;
+  --ok: #0f7a4d;
+  --ok-bg: #eaf6f0;
+  --warn: #8a5a00;
+  --warn-bg: #fff8e8;
+  --err: #b32218;
+  --err-bg: #fdeeec;
+  --calc: #f7f9fc;
+  --field: #fff;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+}
+
+body {
+  background: var(--page);
+  color: var(--ink);
+  font: 13px/1.5 -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.doc {
+  max-width: 1080px;
+  margin: 0 auto;
+  background: var(--doc);
+  min-height: 100vh;
+  border-left: 1px solid var(--line);
+  border-right: 1px solid var(--line);
+}
+
+/* ---------- шапка ---------- */
+
+.hd {
+  padding: 18px 28px 0;
+}
+
+.hd h1 {
+  font-size: 17px;
+  font-weight: 600;
+  margin: 0;
+  letter-spacing: -0.2px;
+}
+
+.hd .s {
+  color: var(--dim);
+  font-size: 12px;
+  margin-top: 3px;
+}
+
+.meta {
+  display: flex;
+  gap: 22px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+  padding-bottom: 14px;
+  font-size: 12px;
+}
+
+.meta div {
+  display: flex;
+  gap: 6px;
+  align-items: baseline;
+}
+
+.meta b {
+  font-weight: 600;
+}
+
+.meta span {
+  color: var(--dim);
+}
+
+/* ---------- вкладки ---------- */
+
+.tabs {
+  display: flex;
+  gap: 2px;
+  border-bottom: 1px solid var(--line);
+  padding: 0 28px;
+  overflow-x: auto;
+  position: sticky;
+  top: 0;
+  background: var(--doc);
+  z-index: 20;
+}
+
+.tabs button {
+  appearance: none;
+  background: none;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  padding: 10px 14px;
+  font: inherit;
+  font-size: 12.5px;
+  color: var(--dim);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.tabs button:hover {
+  color: var(--ink);
+}
+
+.tabs button.on {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+  font-weight: 600;
+}
+
+.pane {
+  display: none;
+  padding: 22px 28px 40px;
+}
+
+.pane.on {
+  display: block;
+}
+
+/* ---------- секции ---------- */
+
+.band {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--band);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 8px 12px;
+  margin: 0 0 2px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+}
+
+.band .ix {
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.band + .band {
+  margin-top: 18px;
+}
+
+h3.sec {
+  font-size: 13px;
+  font-weight: 600;
+  margin: 26px 0 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--line);
+}
+
+h3.sec:first-child {
+  margin-top: 0;
+}
+
+/* ---------- строка формы ---------- */
+
+.frow {
+  display: grid;
+  grid-template-columns: 96px 1fr 190px;
+  gap: 14px;
+  align-items: center;
+  padding: 7px 12px;
+  border-bottom: 1px solid var(--line2);
+}
+
+.frow:hover {
+  background: var(--calc);
+}
+
+.frow.calc {
+  background: var(--calc);
+}
+
+.fcode {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.fname {
+  font-size: 12.5px;
+}
+
+.fname i {
+  display: block;
+  color: var(--dim);
+  font-size: 11px;
+  font-style: normal;
+  margin-top: 1px;
+}
+
+.fval {
+  text-align: right;
+}
+
+@media (max-width: 700px) {
+  .frow {
+    grid-template-columns: 80px 1fr;
+    gap: 6px;
+  }
+
+  .fval {
+    grid-column: 1 / -1;
+  }
+}
+
+/* ---------- поля ---------- */
+
+input,
+select {
+  width: 100%;
+  padding: 6px 9px;
+  border: 1px solid #ccd4de;
+  border-radius: 3px;
+  background: var(--field);
+  color: var(--ink);
+  font: inherit;
+  font-size: 12.5px;
+}
+
+input:focus,
+select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-bg);
+}
+
+input.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+input[readonly] {
+  background: var(--calc);
+  color: var(--ink);
+  font-weight: 600;
+  border-color: var(--line);
+}
+
+input[readonly]:focus {
+  box-shadow: none;
+  border-color: var(--line);
+}
+
+label.f {
+  display: block;
+  font-size: 11px;
+  color: var(--dim);
+  margin-bottom: 4px;
+}
+
+.grid {
+  display: grid;
+  gap: 12px;
+}
+
+.g2 {
+  grid-template-columns: 1fr 1fr;
+}
+
+.g3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.g4 {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+@media (max-width: 760px) {
+  .g2,
+  .g3,
+  .g4 {
+    grid-template-columns: 1fr;
+  }
+}
+
+.chk {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 12.5px;
+  cursor: pointer;
+  padding: 5px 0;
+}
+
+.chk input {
+  width: 15px;
+  height: 15px;
+  flex: none;
+  cursor: pointer;
+}
+
+/* ---------- помесячная сетка I..VI ---------- */
+
+.mgrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 26px;
+  padding: 10px 12px 12px;
+  border-bottom: 1px solid var(--line2);
+  background: var(--calc);
+}
+
+.mcell {
+  display: grid;
+  grid-template-columns: 20px 58px 1fr;
+  gap: 8px;
+  align-items: center;
+}
+
+.mcell .rn {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #fff;
+  background: #9aa7b6;
+  border-radius: 2px;
+  text-align: center;
+  line-height: 17px;
+  height: 17px;
+}
+
+.mcell .mn {
+  font-size: 11px;
+  color: var(--dim);
+}
+
+.mcell.tot .rn {
+  background: var(--accent);
+}
+
+.mcell.tot .mn {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+@media (max-width: 700px) {
+  .mgrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---------- таблицы ---------- */
+
+.tw {
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+th,
+td {
+  border-bottom: 1px solid var(--line2);
+  border-right: 1px solid var(--line2);
+  padding: 6px 8px;
+  text-align: right;
+  white-space: nowrap;
+}
+
+th {
+  background: var(--band);
+  color: var(--dim);
+  font-weight: 600;
+  font-size: 11px;
+  text-align: center;
+  position: relative;
+  border-bottom-color: var(--line);
+}
+
+th .col {
+  display: inline-block;
+  background: #9aa7b6;
+  color: #fff;
+  border-radius: 2px;
+  padding: 0 4px;
+  font-size: 10px;
+  margin-right: 4px;
+}
+
+td.l,
+th.l {
+  text-align: left;
+}
+
+tr:last-child td {
+  border-bottom: 0;
+}
+
+th:last-child,
+td:last-child {
+  border-right: 0;
+}
+
+tr.tot td {
+  background: var(--accent-bg);
+  font-weight: 600;
+}
+
+table input {
+  border: 0;
+  border-radius: 0;
+  background: none;
+  padding: 4px 6px;
+  font-size: 12px;
+}
+
+table input:focus {
+  box-shadow: inset 0 0 0 2px var(--accent-bg);
+  border-radius: 2px;
+}
+
+td.kno {
+  white-space: normal;
+  padding: 5px 6px;
+}
+
+td.kno input {
+  border: 1px solid #ccd4de;
+  border-radius: 3px;
+  padding: 4px 6px;
+  font-size: 12px;
+}
+
+/* ---------- прочее ---------- */
+
+.btn {
+  appearance: none;
+  border: 1px solid #ccd4de;
+  background: #fff;
+  border-radius: 3px;
+  padding: 6px 12px;
+  font: inherit;
+  font-size: 12px;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.btn.pri {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.btn.pri:hover {
+  background: #155ba6;
+  color: #fff;
+}
+
+.btn.mini {
+  padding: 3px 8px;
+  font-size: 11.5px;
+}
+
+.btn.del {
+  color: var(--err);
+  border-color: var(--line);
+  padding: 3px 8px;
+}
+
+.row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.hint {
+  color: var(--dim);
+  font-size: 11.5px;
+  margin: 8px 0 0;
+}
+
+.msg {
+  font-size: 12px;
+  margin: 10px 0;
+  line-height: 1.55;
+}
+
+/* w и e: настоящие предупреждение и ошибка, поэтому в рамке с цветом.
+   i и g: обычная справочная строка, оформляется как простой текст,
+   без рамки и заливки. */
+
+.msg.w {
+  background: var(--warn-bg);
+  border: 1px solid #f0dfb4;
+  color: var(--warn);
+  border-radius: 4px;
+  padding: 9px 12px;
+}
+
+.msg.e {
+  background: var(--err-bg);
+  border: 1px solid #f3c9c4;
+  color: var(--err);
+  border-radius: 4px;
+  padding: 9px 12px;
+}
+
+.msg.i {
+  color: var(--dim);
+}
+
+.msg.g {
+  color: var(--ink);
+}
+
+.card {
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  padding: 14px;
+  margin-bottom: 12px;
+}
+
+.card h4 {
+  margin: 0 0 10px;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+/* шкала роста ОПВР */
+
+.scale {
+  display: flex;
+  gap: 0;
+  margin: 14px 0 0;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.scale .y {
+  flex: 1;
+  padding: 9px 6px;
+  text-align: center;
+  border-right: 1px solid var(--line2);
+  background: var(--calc);
+}
+
+.scale .y:last-child {
+  border-right: 0;
+}
+
+.scale .y em {
+  display: block;
+  font-style: normal;
+  font-size: 10.5px;
+  color: var(--dim);
+}
+
+.scale .y b {
+  display: block;
+  font-size: 15px;
+  margin-top: 2px;
+  font-variant-numeric: tabular-nums;
+}
+
+.scale .y.now {
+  background: var(--accent-bg);
+  box-shadow: inset 0 -3px 0 var(--accent);
+}
+
+.scale .y.now b {
+  color: var(--accent);
+}
+
+.scale .y.fut {
+  opacity: 0.6;
+}
+
+.delta {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 10px;
+  background: var(--ok-bg);
+  color: var(--ok);
+  margin-left: 6px;
+}
+
+/* итоговая панель */
+
+.sum {
+  position: sticky;
+  bottom: 0;
+  background: var(--doc);
+  border-top: 1px solid var(--line);
+  padding: 10px 28px;
+  display: flex;
+  gap: 26px;
+  align-items: center;
+  flex-wrap: wrap;
+  z-index: 15;
+}
+
+.sum .it {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.sum .it span {
+  font-size: 10.5px;
+  color: var(--dim);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.sum .it b {
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+}
+
+.sum .it.big b {
+  font-size: 19px;
+  color: var(--accent);
+}
+
+/* ---------- печать ---------- */
+
+@media print {
+  @page {
+    size: portrait;
+    margin: 12mm;
+  }
+
+  body {
+    background: #fff;
+  }
+
+  .doc {
+    max-width: none;
+    border: 0;
+  }
+
+  .noprint,
+  .tabs,
+  .sum {
+    display: none !important;
+  }
+
+  .pane {
+    display: block !important;
+    padding: 0 0 16px;
+    break-inside: auto;
+  }
+
+  .pane::before {
+    content: attr(data-title);
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    margin: 16px 0 8px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid #333;
+  }
+
+  .frow,
+  .mgrid {
+    break-inside: avoid;
+  }
+
+  input,
+  select {
+    border: 0;
+    background: none;
+    padding: 2px 4px;
+  }
+
+  input[readonly] {
+    background: none;
+  }
+
+  .tw {
+    overflow: visible;
+  }
+
+  table {
+    font-size: 9.5px;
+    table-layout: fixed;
+  }
+
+  th,
+  td {
+    padding: 3px 4px;
+    white-space: normal;
+    word-break: break-word;
+  }
+
+  table input {
+    min-width: 0;
+    width: 100%;
+    font-size: 9.5px;
+  }
+}

@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ФНО 910.00: упрощённая декларация</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="doc">
+
+    <!-- ============ ШАПКА ============ -->
+    <div class="hd">
+      <h1>Упрощённая декларация для субъектов малого бизнеса</h1>
+      <div class="s">
+        Форма 910.00 · индивидуальный предприниматель на СНР
+        на основе упрощённой декларации
+      </div>
+      <div class="meta">
+        <div><span>Период:</span> <b id="mPeriod">не указан</b></div>
+        <div><span>Налогоплательщик:</span> <b id="mWho">не указан</b></div>
+        <div><span>Ставка:</span> <b id="mRate">не указана</b></div>
+        <div><span>Срок сдачи:</span> <b id="mDue">не указан</b></div>
+      </div>
+    </div>
+
+    <div class="tabs" id="tabs"></div>
+
+    <!-- ============ ОБЩИЕ ДАННЫЕ ============ -->
+    <div class="pane on" id="p-tit" data-title="Общие данные">
+
+      <h3 class="sec">Налогоплательщик</h3>
+      <div class="grid g3">
+        <div>
+          <label class="f">ИИН</label>
+          <input
+            id="t_iin"
+            maxlength="12"
+            inputmode="numeric"
+            placeholder="12 цифр"
+            oninput="this.value = this.value.replace(/\D/g, ''); touch()">
+        </div>
+        <div style="grid-column: span 2">
+          <label class="f">Фамилия, имя, отчество</label>
+          <input
+            id="t_fio"
+            placeholder="Фамилия Имя Отчество"
+            oninput="touch()">
+        </div>
+      </div>
+
+      <h3 class="sec">Отчётный период и вид декларации</h3>
+      <div class="grid g3">
+        <div>
+          <label class="f">Отчётный год</label>
+          <select id="t_year"></select>
+        </div>
+        <div>
+          <label class="f">Налоговый период</label>
+          <select id="t_period">
+            <option value="1">1 полугодие</option>
+            <option value="2">2 полугодие</option>
+          </select>
+        </div>
+        <div>
+          <label class="f">Вид декларации</label>
+          <select id="t_vid" onchange="touch()">
+            <option>Очередная</option>
+            <option>Первоначальная</option>
+            <option>Дополнительная</option>
+            <option>Дополнительная по уведомлению</option>
+            <option>Ликвидационная</option>
+          </select>
+        </div>
+      </div>
+
+      <h3 class="sec">Ставка налога по региону</h3>
+      <div class="grid g4">
+        <div>
+          <label class="f">Регион регистрации</label>
+          <select id="t_region"></select>
+        </div>
+        <div>
+          <label class="f">Ставка налога, %</label>
+          <input
+            id="t_rate"
+            class="num"
+            type="number"
+            step="0.1"
+            min="0"
+            max="20">
+        </div>
+        <div>
+          <label class="f">Базовая ставка по НК, %</label>
+          <input id="t_rate_base" class="num" readonly>
+        </div>
+        <div>
+          <label class="f">Статус ставки</label>
+          <input id="t_rate_src" readonly>
+        </div>
+      </div>
+      <p class="hint">
+        Ставка подставляется автоматически, если известна для региона.
+        При необходимости измените её или задайте отдельно для каждого
+        места деятельности в приложении 910.01.
+      </p>
+      <div class="row noprint" style="margin-top: 8px">
+        <span class="hint" style="margin: 0">Быстрый выбор:</span>
+        <button class="btn mini" onclick="setRate(null)">подставить автоматически</button>
+        <button class="btn mini" onclick="setRate(2)">2 %</button>
+        <button class="btn mini" onclick="setRate(3)">3 %</button>
+      </div>
+      <div id="rateNote"></div>
+
+      <h3 class="sec">Особые отметки, влияющие на социальные платежи</h3>
+      <div class="grid g3">
+        <label class="chk">
+          <input type="checkbox" id="f_pens" onchange="touch()">
+          Пенсионер по возрасту
+        </label>
+        <label class="chk">
+          <input type="checkbox" id="f_inv" onchange="touch()">
+          Инвалид I или II группы
+        </label>
+        <label class="chk">
+          <input type="checkbox" id="f_noopvr" onchange="touch()">
+          Освобождён от ОПВР
+        </label>
+      </div>
+      <p class="hint">
+        Пенсионеры и инвалиды I–II групп не уплачивают ОПВ, ОПВР,
+        социальные отчисления и взносы на ОСМС за себя. Отдельный флаг
+        ОПВР предназначен для лиц, рождённых до 1 января 1975 года.
+      </p>
+
+      <h3 class="sec">Профиль</h3>
+      <div class="row noprint">
+        <select id="profileSel" style="max-width: 260px"></select>
+        <button class="btn" onclick="newProfile()">Новый</button>
+        <button class="btn" onclick="saveNow()">Сохранить</button>
+        <button class="btn del" onclick="delProfile()">Удалить</button>
+        <span style="flex: 1"></span>
+        <button class="btn" onclick="exportJson()">Экспорт JSON</button>
+        <button class="btn" onclick="document.getElementById('imp').click()">Импорт</button>
+        <input
+          type="file"
+          id="imp"
+          accept=".json"
+          style="display: none"
+          onchange="importJson(this)">
+        <button class="btn pri" onclick="window.print()">Печать</button>
+      </div>
+      <p class="hint">
+        Данные хранятся только в этом браузере. Каждый предприниматель
+        заводит свой профиль и вводит свой доход и зарплаты.
+      </p>
+    </div>
+
+    <!-- ============ ФОРМА 910.00 ============ -->
+    <div class="pane" id="p-main" data-title="Форма 910.00">
+      <div class="band"><span class="ix">Раздел 1</span> Исчисленные налоги</div>
+      <div id="taxRows"></div>
+      <div id="incByMonth"></div>
+      <div id="taxWarn"></div>
+
+      <div class="band">
+        <span class="ix">Раздел 2</span>
+        Исчисление социальных платежей за индивидуального предпринимателя
+      </div>
+      <div id="socRows"></div>
+      <p class="hint">
+        В строках 005 и 007 указывается заявленный доход предпринимателя
+        за себя. Объект для ОПВ: от 1 до 50 МЗП, для СО: от 1 до 7 МЗП.
+        Ноль в месяце означает, что платежи за этот месяц не начисляются.
+      </p>
+    </div>
+
+    <!-- ============ ПРИЛОЖЕНИЕ 910.01 ============ -->
+    <div class="pane" id="p-app" data-title="Приложение 910.01">
+      <div class="band">
+        <span class="ix">910.01</span> Места осуществления деятельности
+      </div>
+      <div class="tw" style="margin-top: 10px">
+        <table id="placeTable"></table>
+      </div>
+      <div class="row noprint" style="margin-top: 10px">
+        <button class="btn pri" onclick="addPlace()">Добавить место деятельности</button>
+      </div>
+
+      <div class="band" style="margin-top: 22px">
+        <span class="ix">910.01</span> Расчёт налога по местам деятельности
+      </div>
+      <div class="tw" style="margin-top: 10px">
+        <table id="calcPlaceTable"></table>
+      </div>
+      <div id="placeWarn"></div>
+      <div class="msg i" style="margin-top: 12px">
+        Буквы над колонками соответствуют графам официального бланка:
+        <b>A</b> номер, <b>B</b> код УГД, <b>C–F</b> адрес, <b>G</b> ставка,
+        <b>H</b> доход, <b>I</b> удельный вес, <b>J</b> сумма уменьшения,
+        <b>K</b> база для ИПН (H − J), <b>L</b> налог (K × G).
+        Доход можно вводить здесь или в строке 910.00.001, значения
+        связаны. Итог графы H переносится в строку 910.00.001,
+        графы J в 910.00.002, графы L в 910.00.004.
+      </div>
+    </div>
+
+    <!-- ============ РАБОТНИКИ ============ -->
+    <div class="pane" id="p-emp" data-title="Работники (справочно)">
+      <div class="msg i">
+        Налоги и социальные платежи за работников в форму 910.00 не
+        входят: они отражаются в форме 200.00. Этот раздел считает их
+        справочно, чтобы видеть полную сумму к уплате.
+      </div>
+      <div id="empList"></div>
+      <div class="row noprint" style="margin-top: 10px">
+        <button class="btn pri" onclick="addEmp()">Добавить работника</button>
+      </div>
+      <div id="empSum"></div>
+      <div id="empMonths"></div>
+    </div>
+
+    <!-- ============ ПАРАМЕТРЫ ============ -->
+    <div class="pane" id="p-par" data-title="Параметры расчёта">
+
+      <h3 class="sec">Базовые величины</h3>
+      <div class="grid g4">
+        <div>
+          <label class="f">МРП на 1 января, ₸</label>
+          <input id="p_mrp" class="num" type="number" min="0">
+        </div>
+        <div>
+          <label class="f">МЗП, ₸</label>
+          <input id="p_mzp" class="num" type="number" min="0">
+        </div>
+        <div>
+          <label class="f">Базовая ставка налога, %</label>
+          <input id="p_rate" class="num" type="number" step="0.1" min="0">
+        </div>
+        <div>
+          <label class="f">Предельный доход, МРП</label>
+          <input id="p_limit" class="num" type="number" min="0">
+        </div>
+      </div>
+
+      <h3 class="sec">Ставки социальных платежей</h3>
+      <div class="grid g4">
+        <div>
+          <label class="f">ОПВ, %</label>
+          <input id="p_opv" class="num" type="number" step="0.1" min="0">
+        </div>
+        <div>
+          <label class="f">ОПВР, % (ставка растёт ежегодно)</label>
+          <input id="p_opvr" class="num" type="number" step="0.1" min="0">
+        </div>
+        <div>
+          <label class="f">Социальные отчисления, %</label>
+          <input id="p_so" class="num" type="number" step="0.1" min="0">
+        </div>
+        <div>
+          <label class="f">ВОСМС ИП: % от 1,4 МЗП</label>
+          <input id="p_vip" class="num" type="number" step="0.1" min="0">
+        </div>
+      </div>
+      <div id="opvrScale"></div>
+
+      <h3 class="sec">Работники (форма 200.00)</h3>
+      <div class="grid g4">
+        <div>
+          <label class="f">ООСМС работодателя, %</label>
+          <input id="p_oosms" class="num" type="number" step="0.1" min="0">
+        </div>
+        <div>
+          <label class="f">ВОСМС работника, %</label>
+          <input id="p_vosms" class="num" type="number" step="0.1" min="0">
+        </div>
+        <div>
+          <label class="f">ИПН с зарплаты, %</label>
+          <input id="p_ipn" class="num" type="number" step="0.1" min="0">
+        </div>
+        <div>
+          <label class="f">Стандартный вычет, МРП/мес</label>
+          <input id="p_vych" class="num" type="number" step="1" min="0">
+        </div>
+      </div>
+
+      <div class="grid g3" style="margin-top: 12px">
+        <div>
+          <label class="f">Порог 90 %-корректировки, МРП</label>
+          <input id="p_kor90" class="num" type="number" step="1" min="0">
+        </div>
+        <div style="display: flex; align-items: flex-end">
+          <label class="chk">
+            <input type="checkbox" id="p_opvrmin">
+            ОПВР считать не менее чем с 1 МЗП
+          </label>
+        </div>
+        <div style="display: flex; align-items: flex-end" class="noprint">
+          <button class="btn" onclick="resetYearParams()">Вернуть значения года</button>
+        </div>
+      </div>
+      <div id="parNote"></div>
+    </div>
+
+    <!-- ============ ИТОГО К УПЛАТЕ ============ -->
+    <div class="pane" id="p-pay" data-title="Итого к уплате">
+      <h3 class="sec">По форме 910.00</h3>
+      <div class="tw"><table id="payMain"></table></div>
+
+      <h3 class="sec">За работников (форма 200.00, справочно)</h3>
+      <div class="tw"><table id="payEmp"></table></div>
+
+      <div id="dueNote"></div>
+    </div>
+
+    <div class="sum noprint" id="sumBar"></div>
+  </div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
